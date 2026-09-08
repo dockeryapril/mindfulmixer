@@ -125,15 +125,14 @@ export function MixerProvider({ children }: { children: ReactNode }) {
   }, [persisted.settings.haptics]);
 
   // --- controls ------------------------------------------------------------
-  const setVolume = useCallback(
-    (id: string, volume: number) => {
-      const v = Math.max(0, Math.min(100, Math.round(volume)));
-      setChannels((prev) => ({ ...prev, [id]: { volume: v, muted: v === 0 ? false : (prev[id]?.muted ?? false) } }));
-      setActiveMode(null);
-      if (engine.ready) engine.setChannel(id, v / 100);
-    },
-    [engine],
-  );
+  const setVolume = useCallback((id: string, volume: number) => {
+    const v = Math.max(0, Math.min(100, Math.round(volume)));
+    setChannels((prev) => ({
+      ...prev,
+      [id]: { volume: v, muted: v === 0 ? false : (prev[id]?.muted ?? false) },
+    }));
+    setActiveMode(null);
+  }, []);
 
   const toggleMute = useCallback(
     (id: string) => {
@@ -179,7 +178,8 @@ export function MixerProvider({ children }: { children: ReactNode }) {
     const mode = MODES.find((m) => m.id === id);
     if (!mode) return;
     const next = emptyChannels();
-    for (const [sound, volume] of Object.entries(mode.levels)) next[sound] = { volume, muted: false };
+    for (const [sound, volume] of Object.entries(mode.levels))
+      next[sound] = { volume, muted: false };
     setChannels(next);
     setActiveMode(id);
     setLoadedMixId(null);
@@ -283,7 +283,9 @@ export function MixerProvider({ children }: { children: ReactNode }) {
 
   const renameMix = useCallback(
     (id: string, name: string) =>
-      mutateMixes((prev) => prev.map((m) => (m.id === id ? { ...m, name: name.trim() || m.name } : m))),
+      mutateMixes((prev) =>
+        prev.map((m) => (m.id === id ? { ...m, name: name.trim() || m.name } : m)),
+      ),
     [mutateMixes],
   );
 
@@ -315,7 +317,10 @@ export function MixerProvider({ children }: { children: ReactNode }) {
       setChannels({ ...emptyChannels(), ...mix.channels });
       setMaster(mix.masterVolume);
       setTimerMinutes(mix.timerMinutes);
-      setEndsAt(mix.timerMinutes ? Date.now() + mix.timerMinutes * 60_000 : null);
+      // A saved timer is a preference, not an already-running session. Loading
+      // a mix must never begin its countdown before the user starts it.
+      setEndsAt(null);
+      setRemainingMs(null);
       setLoadedMixId(id);
       setActiveMode(null);
       mutateMixes((prev) =>
