@@ -1,24 +1,72 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { AlertTriangle } from "lucide-react";
+import { useMixer } from "@/hooks/use-mixer";
+import { MixerConsole } from "@/components/mixer/MixerConsole";
+import { MasterControls } from "@/components/mixer/MasterControls";
+import { ModeSelector } from "@/components/mixer/ModeSelector";
+import { DigitalTimerDisplay } from "@/components/mixer/DigitalTimerDisplay";
+import { FirstRunOverlay } from "@/components/mixer/FirstRunOverlay";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    meta: [
+      { title: "Mindful Mixer — Blend calming sounds your way" },
+      {
+        name: "description",
+        content:
+          "Mix rain, ocean, fire and more on a tactile sound board. Set a sleep timer, save your favourite blends, and drift off.",
+      },
+      { property: "og:title", content: "Mindful Mixer — Blend calming sounds your way" },
+      {
+        property: "og:description",
+        content: "A tactile sound board for sleep, focus and calm. Blend eight ambient sounds and save your mixes.",
+      },
+    ],
+  }),
+  component: MixerScreen,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 5) return "Late night";
+  if (h < 12) return "Good morning";
+  if (h < 18) return "Good afternoon";
+  return "Good evening";
+}
+
+function MixerScreen() {
+  const { activeMode, applyMode, remainingMs, playing, audioErrors } = useMixer();
+
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+    <>
+      <FirstRunOverlay />
+      <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-4 pt-6 lg:max-w-3xl">
+        <header className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+          <div className="min-w-0">
+            <p className="font-display text-[15px] tracking-tight text-primary">Mindful Mixer</p>
+            <h1 className="mt-1 font-display text-[24px] leading-tight">
+              {greeting()}. What do you need right now?
+            </h1>
+          </div>
+          <DigitalTimerDisplay remainingMs={remainingMs} playing={playing} className="mt-1 shrink-0" />
+        </header>
+
+        <ModeSelector active={activeMode} onSelect={applyMode} />
+
+        {audioErrors.length > 0 && (
+          <p className="flex items-start gap-2 rounded-2xl border border-panel-edge bg-card px-3 py-2 text-[12px] text-muted-foreground">
+            <AlertTriangle size={14} className="mt-0.5 shrink-0 text-primary" aria-hidden="true" />
+            Unavailable right now: {audioErrors.join(", ")}. Everything else still works.
+          </p>
+        )}
+
+        <MixerConsole />
+        <MasterControls />
+
+        <p className="pb-2 text-center text-[11px] text-muted-foreground/70">
+          Placeholder ambient tones are generated in your browser until studio recordings are added.
+        </p>
+      </div>
+    </>
   );
 }
