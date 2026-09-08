@@ -27,7 +27,7 @@ export type SoundIconName =
   | "wind"
   | "waves"
   | "flame"
-  | "train"
+  | "truck"
   | "bug"
   | "om";
 
@@ -48,7 +48,7 @@ export const SOUNDS: SoundDef[] = [
   { id: "wind", name: "Wind", icon: "wind", trim: 0.75, synth: "wind" },
   { id: "ocean", name: "Ocean", icon: "waves", trim: 0.8, synth: "ocean" },
   { id: "fire", name: "Fire", icon: "flame", trim: 0.6, synth: "fire" },
-  { id: "diesel", name: "Idle Diesel", icon: "train", trim: 0.55, synth: "diesel" },
+  { id: "diesel", name: "Truck", icon: "truck", trim: 0.55, synth: "diesel" },
   { id: "crickets", name: "Crickets", icon: "bug", trim: 0.4, synth: "crickets" },
   { id: "om", name: "Om Chant", icon: "om", trim: 0.45, synth: "om" },
 ];

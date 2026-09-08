@@ -1,4 +1,4 @@
-import { Bird, Bug, CloudRain, Flame, TrainFront, Waves, Wind, AudioLines } from "lucide-react";
+import { Bird, Bug, CloudRain, Flame, Truck, Waves, Wind, AudioLines } from "lucide-react";
 import type { SoundIconName } from "@/lib/sounds";
 
 const MAP = {
@@ -7,7 +7,7 @@ const MAP = {
   wind: Wind,
   waves: Waves,
   flame: Flame,
-  train: TrainFront,
+  truck: Truck,
   bug: Bug,
   om: AudioLines,
 } as const;

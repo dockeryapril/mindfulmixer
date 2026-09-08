@@ -28,7 +28,7 @@ export function starterMixes(): SavedMix[] {
   const defs: Array<[string, Record<string, number>, number | null]> = [
     ["Deep Sleep", { rain: 45, om: 30, wind: 18 }, 60],
     ["Rainy Cabin", { rain: 65, fire: 40, wind: 22 }, 45],
-    ["Quiet Train Ride", { diesel: 60, rain: 25 }, 30],
+    ["Quiet Truck Ride", { diesel: 60, rain: 25 }, 30],
     ["Morning Woods", { birds: 55, wind: 30, crickets: 15 }, null],
     ["Ocean Reset", { ocean: 70, wind: 25 }, 15],
     ["Campfire Focus", { fire: 55, crickets: 30, wind: 15 }, 45],
