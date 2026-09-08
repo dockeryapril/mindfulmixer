@@ -47,7 +47,7 @@ function MixerScreen() {
         <header className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
           <div className="min-w-0">
             <p className="font-display text-[15px] tracking-tight text-primary">Mindful Mixer</p>
-            <h1 className="mt-1 font-display text-[24px] leading-tight max-lg:landscape:mt-0 max-lg:landscape:truncate max-lg:landscape:text-[17px]">
+            <h1 className="mt-1 font-display text-[24px] leading-tight max-lg:landscape:sr-only">
               {greeting()}. What do you need right now?
             </h1>
           </div>
