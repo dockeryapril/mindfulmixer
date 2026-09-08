@@ -9,18 +9,30 @@ export const Route = createFileRoute("/mixes")({
       { title: "My Mixes — Mindful Mixer" },
       {
         name: "description",
-        content: "Your saved sound blends: load, rename, duplicate or favourite any mix in one tap.",
+        content:
+          "Your saved sound blends: load, rename, duplicate or favourite any mix in one tap.",
       },
       { property: "og:title", content: "My Mixes — Mindful Mixer" },
-      { property: "og:description", content: "Load, rename and favourite your saved ambient sound blends." },
+      {
+        property: "og:description",
+        content: "Load, rename and favourite your saved ambient sound blends.",
+      },
     ],
   }),
   component: MixesScreen,
 });
 
 function MixesScreen() {
-  const { mixes, loadedMixId, loadMix, renameMix, updateMix, duplicateMix, deleteMix, toggleFavorite } =
-    useMixer();
+  const {
+    mixes,
+    loadedMixId,
+    loadMix,
+    renameMix,
+    updateMix,
+    duplicateMix,
+    deleteMix,
+    toggleFavorite,
+  } = useMixer();
   const navigate = useNavigate();
 
   const sorted = [...mixes].sort((a, b) => Number(b.favorite) - Number(a.favorite));
@@ -44,7 +56,7 @@ function MixesScreen() {
             loaded={loadedMixId === mix.id}
             onLoad={() => {
               loadMix(mix.id);
-              toast(`${mix.name} loaded`, { description: "Press play on the mixer." });
+              toast(`${mix.name} loaded`, { description: "Your mix is playing." });
               void navigate({ to: "/" });
             }}
             onRename={(name) => renameMix(mix.id, name)}

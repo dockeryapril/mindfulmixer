@@ -34,7 +34,7 @@ export function SessionTimer() {
           type="button"
           aria-label="Session timer"
           className={cn(
-            "flex h-12 flex-col items-center justify-center gap-0.5 rounded-2xl border border-panel-edge text-[11px] font-medium transition-colors",
+            "flex h-11 flex-col items-center justify-center gap-0.5 rounded-2xl border border-panel-edge text-[11px] font-medium transition-colors",
             running ? "bg-primary/12 text-primary" : "knob text-foreground/75",
           )}
         >
@@ -61,7 +61,9 @@ export function SessionTimer() {
               }}
               className={cn(
                 "rounded-2xl border border-panel-edge py-3 text-sm font-medium transition-colors",
-                timerMinutes === p.minutes ? "bg-primary/15 text-primary" : "knob text-foreground/80",
+                timerMinutes === p.minutes
+                  ? "bg-primary/15 text-primary"
+                  : "knob text-foreground/80",
               )}
             >
               {p.label}

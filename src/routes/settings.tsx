@@ -11,10 +11,14 @@ export const Route = createFileRoute("/settings")({
       { title: "Settings — Mindful Mixer" },
       {
         name: "description",
-        content: "Choose a default session timer, fade-out length, haptics and theme for Mindful Mixer.",
+        content:
+          "Choose a default session timer, fade-out length, haptics and theme for Mindful Mixer.",
       },
       { property: "og:title", content: "Settings — Mindful Mixer" },
-      { property: "og:description", content: "Default timer, fade-out length, haptics and theme preferences." },
+      {
+        property: "og:description",
+        content: "Default timer, fade-out length, haptics and theme preferences.",
+      },
     ],
   }),
   component: SettingsScreen,
@@ -63,7 +67,9 @@ function SettingsScreen() {
 
       <div className="panel rounded-3xl p-4">
         <h2 className="text-[15px] font-medium">Default session timer</h2>
-        <p className="mt-0.5 text-[12px] text-muted-foreground">Minutes, pre-selected when you open the app.</p>
+        <p className="mt-0.5 text-[12px] text-muted-foreground">
+          Minutes, pre-selected when you open the app.
+        </p>
         <div className="mt-3 flex gap-2">
           {TIMER_OPTIONS.map((o) => (
             <button
@@ -154,12 +160,12 @@ function SettingsScreen() {
         <h2 className="text-[15px] font-medium">How the audio behaves</h2>
         <ul className="mt-2 space-y-1.5 text-[12px] leading-relaxed text-muted-foreground">
           <li>Every sound loops continuously and has its own volume.</li>
-          <li>Master volume affects the whole blend; muting one sound leaves the others playing.</li>
+          <li>Each fader controls its own sound; muting one sound leaves the others playing.</li>
           <li>Changing a level never restarts a sound.</li>
-          <li>Sound can only begin after you press play — phones and browsers require that first tap.</li>
+          <li>Sound begins when you raise a fader, tap a preset, or load a saved mix.</li>
           <li>
-            Sounds are currently generated in your browser as clearly-labelled placeholders until studio
-            recordings are added.
+            Local recordings play first; a built-in fallback keeps a channel working if its file is
+            unavailable.
           </li>
         </ul>
       </section>
@@ -167,8 +173,8 @@ function SettingsScreen() {
       <section className="panel rounded-3xl p-4">
         <h2 className="text-[15px] font-medium">About Mindful Mixer</h2>
         <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-          A tactile sound board for sleeping, relaxing, focusing and calming down. Mixes and preferences are
-          stored privately on this device.
+          A tactile sound board for sleeping, relaxing, focusing and calming down. Mixes and
+          preferences are stored privately on this device.
         </p>
       </section>
     </div>
