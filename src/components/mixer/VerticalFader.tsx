@@ -141,11 +141,7 @@ export function VerticalFader({
         data-fader-handle
         className={cn(
           "absolute left-1/2 flex h-8 w-8 -translate-x-1/2 items-center justify-center rounded-full border border-panel-edge transition-[color,background-color,box-shadow]",
-          active
-            ? "bg-primary/15 text-primary shadow-[0_0_12px_color-mix(in_oklab,var(--color-primary)_28%,transparent)]"
-            : muted
-              ? "bg-foreground/8 text-muted-foreground/45"
-              : "knob text-muted-foreground",
+          muted ? "bg-foreground/8 text-muted-foreground/45" : "knob text-muted-foreground",
         )}
         style={{ bottom: `calc(${value}% - ${value * 0.32}px)` }}
       >
