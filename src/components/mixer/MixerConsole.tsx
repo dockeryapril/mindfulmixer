@@ -26,7 +26,10 @@ export function MixerConsole() {
   return (
     <section
       aria-label="Sound channels"
-      className={cn("panel relative rounded-3xl p-3 transition-shadow duration-500", playing && "ring-1 ring-primary/20")}
+      className={cn(
+        "panel relative rounded-3xl p-3 transition-shadow duration-500",
+        playing && "ring-1 ring-primary/20",
+      )}
     >
       <div
         ref={scrollRef}
@@ -65,7 +68,7 @@ export function MixerConsole() {
         {anySound ? "Sounds selected" : "No sounds selected"}
       </p>
       <span className="mt-1 block text-center text-[10px] tracking-wide text-muted-foreground/70 max-lg:landscape:hidden lg:hidden">
-        Swipe for more channels
+        Four channels at a time · Swipe for more
       </span>
     </section>
   );
