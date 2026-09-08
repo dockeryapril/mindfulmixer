@@ -9,7 +9,7 @@ import { SOUNDS, type SoundDef } from "./sounds";
 type Channel = {
   gain: GainNode;
   level: number; // 0..1 requested by UI (already mute-adjusted)
-  schedule?: (until: number) => void;
+  schedule?: ((until: number) => void) | undefined;
 };
 
 const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
@@ -32,8 +32,9 @@ function noiseBuffer(ctx: AudioContext, kind: "white" | "brown", seconds = 6) {
   const fade = Math.min(2000, Math.floor(len / 8));
   for (let i = 0; i < fade; i++) {
     const k = i / fade;
-    data[i] *= k;
-    data[len - 1 - i] *= k;
+    data[i] = (data[i] ?? 0) * k;
+    data[len - 1 - i] = (data[len - 1 - i] ?? 0) * k;
+
   }
   return buf;
 }
