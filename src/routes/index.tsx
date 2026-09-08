@@ -6,8 +6,6 @@ import { MasterControls } from "@/components/mixer/MasterControls";
 import { ModeSelector } from "@/components/mixer/ModeSelector";
 import { DigitalTimerDisplay } from "@/components/mixer/DigitalTimerDisplay";
 import { FirstRunOverlay } from "@/components/mixer/FirstRunOverlay";
-import { RotatePrompt } from "@/components/mixer/RotatePrompt";
-import { useIsPortraitPhone } from "@/hooks/use-orientation";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -21,7 +19,8 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "Mindful Mixer — Blend calming sounds your way" },
       {
         property: "og:description",
-        content: "A tactile sound board for sleep, focus and calm. Blend eight ambient sounds and save your mixes.",
+        content:
+          "A tactile sound board for sleep, focus and calm. Blend eight ambient sounds and save your mixes.",
       },
     ],
   }),
@@ -38,7 +37,6 @@ function greeting() {
 
 function MixerScreen() {
   const { activeMode, applyMode, remainingMs, playing, audioErrors } = useMixer();
-  const { isPortraitPhone, showAnyway } = useIsPortraitPhone();
 
   return (
     <>
@@ -51,7 +49,11 @@ function MixerScreen() {
               {greeting()}. What do you need right now?
             </h1>
           </div>
-          <DigitalTimerDisplay remainingMs={remainingMs} playing={playing} className="mt-1 shrink-0" />
+          <DigitalTimerDisplay
+            remainingMs={remainingMs}
+            playing={playing}
+            className="mt-1 shrink-0"
+          />
         </header>
 
         <ModeSelector active={activeMode} onSelect={applyMode} />
@@ -63,7 +65,7 @@ function MixerScreen() {
           </p>
         )}
 
-        {isPortraitPhone ? <RotatePrompt onShowAnyway={showAnyway} /> : <MixerConsole />}
+        <MixerConsole />
         <MasterControls />
 
         <p className="pb-2 text-center text-[11px] text-muted-foreground/70 max-lg:landscape:hidden">
