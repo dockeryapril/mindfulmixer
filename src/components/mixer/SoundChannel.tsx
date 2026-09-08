@@ -18,7 +18,7 @@ export function SoundChannel({ sound, state, playing, onVolume, onToggleMute }: 
   const sounding = active && playing;
 
   return (
-    <div className="flex w-[76px] shrink-0 snap-start flex-col items-center gap-2 max-lg:landscape:w-[11.5%] max-lg:landscape:gap-1">
+    <div className="flex w-[calc(25%_-_0.375rem)] shrink-0 snap-start flex-col items-center gap-2 max-lg:landscape:w-[11.5%] max-lg:landscape:gap-1 lg:w-[76px]">
       <div className="flex h-4 items-center justify-center max-lg:landscape:h-2">
         <span
           className={cn("h-1.5 w-1.5 rounded-full bg-primary", sounding ? "breathe" : "opacity-0")}
@@ -29,7 +29,9 @@ export function SoundChannel({ sound, state, playing, onVolume, onToggleMute }: 
 
       <VerticalFader value={state.volume} onChange={onVolume} label={sound.name} active={active} />
 
-      <span className={cn("digital text-[11px] tabular-nums", active ? "opacity-100" : "opacity-45")}>
+      <span
+        className={cn("digital text-[11px] tabular-nums", active ? "opacity-100" : "opacity-45")}
+      >
         {String(state.volume).padStart(2, "0")}
       </span>
 
