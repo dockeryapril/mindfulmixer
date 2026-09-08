@@ -19,7 +19,7 @@ export const MODES: { id: ModeId; label: string; levels: Record<string, number> 
   { id: "sleep", label: "Sleep", levels: { rain: 55, om: 25, wind: 20 } },
   { id: "relax", label: "Relax", levels: { ocean: 60, birds: 30, wind: 25 } },
   { id: "focus", label: "Focus", levels: { rain: 40, diesel: 45 } },
-  { id: "reset", label: "Reset", levels: { om: 55, fire: 30, crickets: 20 } },
+  { id: "reset", label: "Reset", levels: {} },
 ];
 
 const iso = () => new Date().toISOString();

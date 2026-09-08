@@ -34,6 +34,7 @@ interface MixerContextValue {
   timerMinutes: number | null;
   remainingMs: number | null;
   audioErrors: string[];
+  unlockAudio: () => void;
   setVolume: (id: string, volume: number) => void;
   toggleMute: (id: string) => void;
   setMasterVolume: (v: number) => void;
@@ -143,12 +144,22 @@ export function MixerProvider({ children }: { children: ReactNode }) {
     if (startingRef.current) return;
     startingRef.current = true;
     try {
-      await engine.play();
-      engine.setMaster(1);
-      setPlaying(true);
+      const started = await engine.play();
+      if (started) {
+        engine.setMaster(1);
+        setPlaying(true);
+      } else {
+        setPlaying(false);
+      }
     } finally {
       startingRef.current = false;
     }
+  }, [engine]);
+
+  // Called on pointer-down so iOS receives the Web Audio resume request while
+  // the browser is still processing the user's direct gesture.
+  const unlockAudio = useCallback(() => {
+    void engine.ensure();
   }, [engine]);
 
   const setVolume = useCallback(
@@ -210,9 +221,13 @@ export function MixerProvider({ children }: { children: ReactNode }) {
       setChannels(next);
       setActiveMode(id);
       setLoadedMixId(null);
-      void ensurePlayback();
+      if (Object.values(mode.levels).some((volume) => volume > 0)) {
+        void ensurePlayback();
+      } else {
+        stopPlayback(0.2);
+      }
     },
-    [ensurePlayback],
+    [ensurePlayback, stopPlayback],
   );
 
   const clearMix = useCallback(() => {
@@ -379,6 +394,7 @@ export function MixerProvider({ children }: { children: ReactNode }) {
     timerMinutes,
     remainingMs,
     audioErrors,
+    unlockAudio,
     setVolume,
     toggleMute,
     setMasterVolume,

@@ -4,7 +4,7 @@ import { SoundChannel } from "./SoundChannel";
 import { cn } from "@/lib/utils";
 
 export function MixerConsole() {
-  const { channels, playing, setVolume, toggleMute, anySound } = useMixer();
+  const { channels, playing, setVolume, toggleMute, unlockAudio, anySound } = useMixer();
   return (
     <section
       aria-label="Sound channels"
@@ -22,6 +22,7 @@ export function MixerConsole() {
             playing={playing}
             onVolume={(v) => setVolume(sound.id, v)}
             onToggleMute={() => toggleMute(sound.id)}
+            onInteractionStart={unlockAudio}
           />
         ))}
       </div>

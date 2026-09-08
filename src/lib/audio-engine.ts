@@ -9,7 +9,7 @@ import { SOUNDS, type SoundDef } from "./sounds";
 type Channel = {
   gain: GainNode;
   level: number; // 0..1 requested by UI (already mute-adjusted)
-  media?: HTMLAudioElement | undefined;
+  source?: AudioBufferSourceNode | undefined;
   fallbackStarted?: boolean | undefined;
   schedule?: ((until: number) => void) | undefined;
 };
@@ -256,13 +256,13 @@ class AudioEngine {
     return this.started;
   }
 
-  async ensure() {
-    if (typeof window === "undefined") return;
+  async ensure(): Promise<boolean> {
+    if (typeof window === "undefined") return false;
     if (!this.ctx) {
       const AC: typeof AudioContext =
         window.AudioContext ??
         (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      if (!AC) return;
+      if (!AC) return false;
       const ctx = new AC();
       this.ctx = ctx;
       this.master = ctx.createGain();
@@ -276,9 +276,10 @@ class AudioEngine {
       try {
         await this.ctx.resume();
       } catch {
-        /* ignore */
+        return false;
       }
     }
+    return this.ctx.state === "running";
   }
 
   private build(def: SoundDef) {
@@ -288,33 +289,38 @@ class AudioEngine {
     gain.connect(this.master!);
     const channel: Channel = { gain, level: 0 };
 
+    this.channels.set(def.id, channel);
+
     if (def.src) {
-      const el = new Audio(def.src);
-      el.loop = true;
-      el.preload = "auto";
-      el.playsInline = true;
-      channel.media = el;
-
-      const fallbackToSynth = () => {
-        if (channel.fallbackStarted) return;
-        channel.fallbackStarted = true;
-        this.events.onError?.(def.id, def.name);
-        channel.schedule = buildSynth(ctx, def, gain);
-      };
-
-      el.addEventListener("error", fallbackToSynth, { once: true });
-      try {
-        const node = ctx.createMediaElementSource(el);
-        node.connect(gain);
-        void el.play().catch(() => undefined);
-      } catch {
-        fallbackToSynth();
-      }
+      // Decode recordings inside the already-unlocked Web Audio context. This
+      // avoids starting eight HTMLAudioElements, which iOS may reject even
+      // after a fader gesture.
+      void this.loadRecording(def, channel);
     } else {
       channel.schedule = buildSynth(ctx, def, gain);
     }
+  }
 
-    this.channels.set(def.id, channel);
+  private async loadRecording(def: SoundDef, channel: Channel) {
+    const ctx = this.ctx;
+    if (!ctx || !def.src) return;
+    try {
+      const response = await fetch(def.src);
+      if (!response.ok) throw new Error(`Audio request failed: ${response.status}`);
+      const buffer = await ctx.decodeAudioData(await response.arrayBuffer());
+      if (this.ctx !== ctx || ctx.state === "closed") return;
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.loop = true;
+      source.connect(channel.gain);
+      source.start();
+      channel.source = source;
+    } catch {
+      if (channel.fallbackStarted || this.ctx !== ctx || ctx.state === "closed") return;
+      channel.fallbackStarted = true;
+      this.events.onError?.(def.id, def.name);
+      channel.schedule = buildSynth(ctx, def, channel.gain);
+    }
   }
 
   private tick() {
@@ -347,16 +353,17 @@ class AudioEngine {
     if (this.ctx && this.playing) this.ramp(this.master!.gain, this.masterLevel);
   }
 
-  async play() {
-    await this.ensure();
-    if (!this.ctx) return;
+  async play(): Promise<boolean> {
+    const unlocked = await this.ensure();
+    if (!unlocked || !this.ctx) {
+      this.playing = false;
+      return false;
+    }
     if (this.pauseTimer) clearTimeout(this.pauseTimer);
     this.pauseTimer = null;
-    this.channels.forEach((channel) => {
-      if (channel.media?.paused) void channel.media.play().catch(() => undefined);
-    });
     this.playing = true;
     this.ramp(this.master!.gain, this.masterLevel, 0.5);
+    return true;
   }
 
   pause(fadeSeconds = 0.5) {
@@ -369,9 +376,6 @@ class AudioEngine {
     if (this.pauseTimer) clearTimeout(this.pauseTimer);
     this.pauseTimer = setTimeout(
       () => {
-        if (!this.playing) {
-          this.channels.forEach((channel) => channel.media?.pause());
-        }
         this.pauseTimer = null;
       },
       Math.max(0, fadeSeconds * 1000) + 50,
@@ -389,9 +393,11 @@ class AudioEngine {
     this.timer = null;
     this.pauseTimer = null;
     this.channels.forEach((channel) => {
-      channel.media?.pause();
-      channel.media?.removeAttribute("src");
-      channel.media?.load();
+      try {
+        channel.source?.stop();
+      } catch {
+        /* already stopped */
+      }
     });
     void this.ctx?.close();
     this.ctx = null;
