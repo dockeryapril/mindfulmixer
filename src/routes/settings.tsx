@@ -94,7 +94,7 @@ function SettingsScreen() {
         </p>
         <Slider
           value={[settings.fadeOutSeconds]}
-          onValueChange={([v]) => updateSettings({ fadeOutSeconds: v })}
+          onValueChange={(v) => updateSettings({ fadeOutSeconds: v[0] ?? 8 })}
           min={1}
           max={30}
           step={1}

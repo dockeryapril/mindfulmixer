@@ -88,7 +88,7 @@ export function MasterControls() {
           </div>
           <Slider
             value={[masterVolume]}
-            onValueChange={([v]) => setMasterVolume(v)}
+            onValueChange={(v) => setMasterVolume(v[0] ?? 0)}
             max={100}
             step={1}
             aria-label="Master volume"
