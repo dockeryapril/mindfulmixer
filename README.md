@@ -1,5 +1,12 @@
 # Mindful Mixer
 
+## Production audio
+
+The eight mixer channels use local, iPhone-compatible AAC recordings and keep
+the existing Web Audio synthesis as an automatic fallback. Source, creator,
+license, and modification details are documented in
+[`public/audio/CREDITS.md`](public/audio/CREDITS.md).
+
 I am building a mobile-first ambient sound-mixing app called “Mindful Mixer.”
 
 PRODUCT CONCEPT
@@ -82,7 +89,7 @@ Ocean
 
 Fire
 
-Idle Diesel Engine 
+Idle Diesel Engine
 
 Crickets
 

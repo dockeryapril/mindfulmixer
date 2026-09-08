@@ -9,6 +9,8 @@ import { SOUNDS, type SoundDef } from "./sounds";
 type Channel = {
   gain: GainNode;
   level: number; // 0..1 requested by UI (already mute-adjusted)
+  media?: HTMLAudioElement | undefined;
+  fallbackStarted?: boolean | undefined;
   schedule?: ((until: number) => void) | undefined;
 };
 
@@ -34,7 +36,6 @@ function noiseBuffer(ctx: AudioContext, kind: "white" | "brown", seconds = 6) {
     const k = i / fade;
     data[i] = (data[i] ?? 0) * k;
     data[len - 1 - i] = (data[len - 1 - i] ?? 0) * k;
-
   }
   return buf;
 }
@@ -245,6 +246,7 @@ class AudioEngine {
   private master: GainNode | null = null;
   private channels = new Map<string, Channel>();
   private timer: ReturnType<typeof setInterval> | null = null;
+  private pauseTimer: ReturnType<typeof setTimeout> | null = null;
   private masterLevel = 0.75;
   private started = false;
   playing = false;
@@ -258,7 +260,8 @@ class AudioEngine {
     if (typeof window === "undefined") return;
     if (!this.ctx) {
       const AC: typeof AudioContext =
-        window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        window.AudioContext ??
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       if (!AC) return;
       const ctx = new AC();
       this.ctx = ctx;
@@ -288,17 +291,24 @@ class AudioEngine {
     if (def.src) {
       const el = new Audio(def.src);
       el.loop = true;
-      el.crossOrigin = "anonymous";
-      el.addEventListener("error", () => {
+      el.preload = "auto";
+      el.playsInline = true;
+      channel.media = el;
+
+      const fallbackToSynth = () => {
+        if (channel.fallbackStarted) return;
+        channel.fallbackStarted = true;
         this.events.onError?.(def.id, def.name);
         channel.schedule = buildSynth(ctx, def, gain);
-      });
+      };
+
+      el.addEventListener("error", fallbackToSynth, { once: true });
       try {
         const node = ctx.createMediaElementSource(el);
         node.connect(gain);
         void el.play().catch(() => undefined);
       } catch {
-        channel.schedule = buildSynth(ctx, def, gain);
+        fallbackToSynth();
       }
     } else {
       channel.schedule = buildSynth(ctx, def, gain);
@@ -340,6 +350,11 @@ class AudioEngine {
   async play() {
     await this.ensure();
     if (!this.ctx) return;
+    if (this.pauseTimer) clearTimeout(this.pauseTimer);
+    this.pauseTimer = null;
+    this.channels.forEach((channel) => {
+      if (channel.media?.paused) void channel.media.play().catch(() => undefined);
+    });
     this.playing = true;
     this.ramp(this.master!.gain, this.masterLevel, 0.5);
   }
@@ -351,6 +366,16 @@ class AudioEngine {
     }
     this.playing = false;
     this.ramp(this.master.gain, 0, fadeSeconds);
+    if (this.pauseTimer) clearTimeout(this.pauseTimer);
+    this.pauseTimer = setTimeout(
+      () => {
+        if (!this.playing) {
+          this.channels.forEach((channel) => channel.media?.pause());
+        }
+        this.pauseTimer = null;
+      },
+      Math.max(0, fadeSeconds * 1000) + 50,
+    );
   }
 
   /** Timer completion / clear: long graceful fade, then stop. */
@@ -360,7 +385,14 @@ class AudioEngine {
 
   dispose() {
     if (this.timer) clearInterval(this.timer);
+    if (this.pauseTimer) clearTimeout(this.pauseTimer);
     this.timer = null;
+    this.pauseTimer = null;
+    this.channels.forEach((channel) => {
+      channel.media?.pause();
+      channel.media?.removeAttribute("src");
+      channel.media?.load();
+    });
     void this.ctx?.close();
     this.ctx = null;
     this.channels.clear();
