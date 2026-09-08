@@ -10,9 +10,17 @@ interface Props {
   playing: boolean;
   onVolume: (v: number) => void;
   onToggleMute: () => void;
+  onInteractionStart: () => void;
 }
 
-export function SoundChannel({ sound, state, playing, onVolume, onToggleMute }: Props) {
+export function SoundChannel({
+  sound,
+  state,
+  playing,
+  onVolume,
+  onToggleMute,
+  onInteractionStart,
+}: Props) {
   const active = state.volume > 0 && !state.muted;
   const sounding = active && playing;
 
@@ -37,6 +45,7 @@ export function SoundChannel({ sound, state, playing, onVolume, onToggleMute }: 
         sounding={sounding}
         handle={<SoundIcon name={sound.icon} />}
         onToggleMute={onToggleMute}
+        onInteractionStart={onInteractionStart}
       />
       <span className="sr-only">{sounding ? `${sound.name} is playing` : ""}</span>
     </div>

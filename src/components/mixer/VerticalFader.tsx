@@ -10,6 +10,7 @@ interface VerticalFaderProps {
   sounding?: boolean;
   handle: ReactNode;
   onToggleMute: () => void;
+  onInteractionStart?: () => void;
   /** Tailwind height classes for the fader travel. */
   heightClassName?: string;
 }
@@ -24,6 +25,7 @@ export function VerticalFader({
   sounding = false,
   handle,
   onToggleMute,
+  onInteractionStart,
   heightClassName = "h-[clamp(7rem,23dvh,10rem)] max-lg:landscape:h-[clamp(4rem,20dvh,7rem)]",
 }: VerticalFaderProps) {
   const trackRef = useRef<HTMLDivElement>(null);
@@ -84,6 +86,7 @@ export function VerticalFader({
       onPointerDown={(e) => {
         e.preventDefault();
         e.stopPropagation();
+        onInteractionStart?.();
         dragging.current = true;
         tapCandidate.current = Boolean((e.target as Element).closest("[data-fader-handle]"));
         startY.current = e.clientY;
