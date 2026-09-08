@@ -1,7 +1,7 @@
 import { RotateCcw, Smartphone } from "lucide-react";
 
 /** Shown on upright phones: the full eight-channel board needs a wide screen. */
-export function RotatePrompt() {
+export function RotatePrompt({ onShowAnyway }: { onShowAnyway?: () => void }) {
   return (
     <section
       aria-label="Rotate your phone to open the mixing board"
@@ -21,6 +21,15 @@ export function RotatePrompt() {
         The mixing board opens in landscape so all eight sounds sit side by side, ready under your
         thumbs.
       </p>
+      {onShowAnyway ? (
+        <button
+          type="button"
+          onClick={onShowAnyway}
+          className="mt-1 min-h-11 rounded-full border border-panel-edge px-5 text-[13px] font-medium text-primary transition-colors hover:bg-secondary/40"
+        >
+          Open the board anyway
+        </button>
+      ) : null}
     </section>
   );
 }

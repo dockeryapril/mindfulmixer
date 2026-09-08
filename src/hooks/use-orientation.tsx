@@ -1,19 +1,35 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 /**
  * Reports whether the viewport is a portrait-shaped small screen (phone held
- * upright). Read after mount so SSR and hydration agree.
+ * upright). Measured from actual box size so it also works inside embedded
+ * previews where media-query orientation can be unreliable. Read after mount so
+ * SSR and hydration agree. The user can override with `showAnyway`.
  */
 export function useIsPortraitPhone() {
   const [isPortraitPhone, setIsPortraitPhone] = useState(false);
+  const [override, setOverride] = useState(false);
 
   useEffect(() => {
-    const mq = window.matchMedia("(orientation: portrait) and (max-width: 1023px)");
-    const update = () => setIsPortraitPhone(mq.matches);
+    const update = () => {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      // Narrow screen that is taller than it is wide: upright phone.
+      setIsPortraitPhone(w < 1024 && h > w);
+    };
     update();
+    window.addEventListener("resize", update);
+    window.addEventListener("orientationchange", update);
+    const mq = window.matchMedia("(orientation: portrait)");
     mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("orientationchange", update);
+      mq.removeEventListener("change", update);
+    };
   }, []);
 
-  return isPortraitPhone;
+  const showAnyway = useCallback(() => setOverride(true), []);
+
+  return { isPortraitPhone: isPortraitPhone && !override, showAnyway };
 }

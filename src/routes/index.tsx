@@ -38,7 +38,7 @@ function greeting() {
 
 function MixerScreen() {
   const { activeMode, applyMode, remainingMs, playing, audioErrors } = useMixer();
-  const portraitPhone = useIsPortraitPhone();
+  const { isPortraitPhone, showAnyway } = useIsPortraitPhone();
 
   return (
     <>
@@ -63,7 +63,7 @@ function MixerScreen() {
           </p>
         )}
 
-        {portraitPhone ? <RotatePrompt /> : <MixerConsole />}
+        {isPortraitPhone ? <RotatePrompt onShowAnyway={showAnyway} /> : <MixerConsole />}
         <MasterControls />
 
         <p className="pb-2 text-center text-[11px] text-muted-foreground/70 max-lg:landscape:hidden">
