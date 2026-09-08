@@ -16,7 +16,7 @@ export function VerticalFader({
   onChange,
   label,
   active = false,
-  heightClassName = "h-44 max-lg:landscape:h-[24vh] max-lg:landscape:min-h-20 max-lg:landscape:max-h-28",
+  heightClassName = "h-44 max-lg:landscape:h-[19vh] max-lg:landscape:min-h-16 max-lg:landscape:max-h-24",
 }: VerticalFaderProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
