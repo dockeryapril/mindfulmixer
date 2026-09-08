@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 interface VerticalFaderProps {
@@ -6,6 +6,10 @@ interface VerticalFaderProps {
   onChange: (value: number) => void;
   label: string;
   active?: boolean;
+  muted?: boolean;
+  sounding?: boolean;
+  handle: ReactNode;
+  onToggleMute: () => void;
   /** Tailwind height classes for the fader travel. */
   heightClassName?: string;
 }
@@ -16,10 +20,16 @@ export function VerticalFader({
   onChange,
   label,
   active = false,
+  muted = false,
+  sounding = false,
+  handle,
+  onToggleMute,
   heightClassName = "h-[clamp(7rem,23dvh,10rem)] max-lg:landscape:h-[clamp(4rem,20dvh,7rem)]",
 }: VerticalFaderProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
+  const tapCandidate = useRef(false);
+  const startY = useRef(0);
 
   /* Keep the page still while a finger is on the fader. */
   useEffect(() => {
@@ -39,7 +49,7 @@ export function VerticalFader({
       const el = trackRef.current;
       if (!el) return;
       const rect = el.getBoundingClientRect();
-      const pad = 14; // half handle
+      const pad = 16; // half of the circular icon handle
       const usable = rect.height - pad * 2;
       const y = Math.min(rect.bottom - pad, Math.max(rect.top + pad, clientY));
       const ratio = 1 - (y - (rect.top + pad)) / usable;
@@ -54,6 +64,7 @@ export function VerticalFader({
     else if (e.key === "ArrowDown" || e.key === "ArrowLeft") onChange(Math.max(0, value - step));
     else if (e.key === "Home") onChange(0);
     else if (e.key === "End") onChange(100);
+    else if (e.key === " " || e.key === "Enter") onToggleMute();
     else return;
     e.preventDefault();
   };
@@ -67,32 +78,42 @@ export function VerticalFader({
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={value}
-      aria-valuetext={`${value} percent`}
+      aria-valuetext={`${value} percent${muted ? ", muted" : ""}`}
       aria-orientation="vertical"
       onKeyDown={onKeyDown}
       onPointerDown={(e) => {
         e.preventDefault();
         e.stopPropagation();
         dragging.current = true;
+        tapCandidate.current = Boolean((e.target as Element).closest("[data-fader-handle]"));
+        startY.current = e.clientY;
         e.currentTarget.setPointerCapture(e.pointerId);
-        fromEvent(e.clientY);
+        if (!tapCandidate.current) fromEvent(e.clientY);
       }}
       onPointerMove={(e) => {
         if (!dragging.current) return;
         e.preventDefault();
         e.stopPropagation();
+        if (Math.abs(e.clientY - startY.current) > 4) tapCandidate.current = false;
         fromEvent(e.clientY);
       }}
       onPointerUp={(e) => {
         e.stopPropagation();
+        const shouldToggle = tapCandidate.current;
         dragging.current = false;
-        e.currentTarget.releasePointerCapture(e.pointerId);
+        tapCandidate.current = false;
+        if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+          e.currentTarget.releasePointerCapture(e.pointerId);
+        }
+        if (shouldToggle) onToggleMute();
       }}
       onPointerCancel={() => {
         dragging.current = false;
+        tapCandidate.current = false;
       }}
       onLostPointerCapture={() => {
         dragging.current = false;
+        tapCandidate.current = false;
       }}
       className={cn(
         "relative mx-auto w-full max-w-10 cursor-pointer touch-none overscroll-none rounded-full select-none",
@@ -115,12 +136,27 @@ export function VerticalFader({
           boxShadow: active ? "var(--glow-accent)" : "none",
         }}
       />
-      {/* raised handle */}
+      {/* The sound icon is both the draggable fader handle and tap-to-mute control. */}
       <div
-        className="knob pointer-events-none absolute left-1/2 h-7 w-9 -translate-x-1/2 rounded-full border border-panel-edge"
-        style={{ bottom: `calc(${value}% - ${value * 0.28}px)` }}
+        data-fader-handle
+        className={cn(
+          "absolute left-1/2 flex h-8 w-8 -translate-x-1/2 items-center justify-center rounded-full border border-panel-edge transition-[color,background-color,box-shadow]",
+          active
+            ? "bg-primary/15 text-primary shadow-[0_0_12px_color-mix(in_oklab,var(--color-primary)_28%,transparent)]"
+            : muted
+              ? "bg-foreground/8 text-muted-foreground/45"
+              : "knob text-muted-foreground",
+        )}
+        style={{ bottom: `calc(${value}% - ${value * 0.32}px)` }}
       >
-        <span className="absolute inset-x-2 top-1/2 h-px -translate-y-1/2 bg-panel-edge" />
+        {handle}
+        <span
+          className={cn(
+            "absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-primary",
+            sounding ? "breathe" : "opacity-0",
+          )}
+          aria-hidden="true"
+        />
       </div>
     </div>
   );
