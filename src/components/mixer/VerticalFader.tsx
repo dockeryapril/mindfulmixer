@@ -71,22 +71,29 @@ export function VerticalFader({
       aria-orientation="vertical"
       onKeyDown={onKeyDown}
       onPointerDown={(e) => {
+        e.stopPropagation();
         dragging.current = true;
         e.currentTarget.setPointerCapture(e.pointerId);
         fromEvent(e.clientY);
       }}
       onPointerMove={(e) => {
-        if (dragging.current) fromEvent(e.clientY);
+        if (!dragging.current) return;
+        e.stopPropagation();
+        fromEvent(e.clientY);
       }}
       onPointerUp={(e) => {
+        e.stopPropagation();
         dragging.current = false;
         e.currentTarget.releasePointerCapture(e.pointerId);
       }}
       onPointerCancel={() => {
         dragging.current = false;
       }}
-      className="relative mx-auto w-11 cursor-pointer touch-none rounded-full"
-      style={{ height }}
+      className={cn(
+        "relative mx-auto w-11 cursor-pointer touch-none overscroll-contain rounded-full select-none",
+        heightClassName,
+      )}
+      style={{ touchAction: "none" }}
     >
       {/* recessed track */}
       <div className="groove absolute inset-x-[13px] inset-y-0 rounded-full" />
