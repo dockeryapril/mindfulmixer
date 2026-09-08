@@ -30,7 +30,7 @@ export function MixerConsole() {
     >
       <div
         ref={scrollRef}
-        className="no-scrollbar flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 lg:justify-center"
+        className="no-scrollbar flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain pb-1 max-lg:landscape:justify-between max-lg:landscape:gap-1 max-lg:landscape:overflow-x-visible lg:justify-center"
       >
         {SOUNDS.map((sound) => (
           <SoundChannel
@@ -48,7 +48,7 @@ export function MixerConsole() {
       <div
         aria-hidden="true"
         className={cn(
-          "pointer-events-none absolute inset-y-3 right-1 flex w-10 items-center justify-end rounded-r-3xl transition-opacity duration-300 lg:hidden",
+          "pointer-events-none absolute inset-y-3 right-1 flex w-10 items-center justify-end rounded-r-3xl transition-opacity duration-300 max-lg:landscape:hidden lg:hidden",
           atEnd ? "opacity-0" : "opacity-100",
         )}
         style={{ background: "linear-gradient(270deg, var(--panel) 20%, transparent)" }}
@@ -64,7 +64,7 @@ export function MixerConsole() {
       <p className="sr-only" aria-live="polite">
         {anySound ? "Sounds selected" : "No sounds selected"}
       </p>
-      <span className="mt-1 block text-center text-[10px] tracking-wide text-muted-foreground/70 lg:hidden">
+      <span className="mt-1 block text-center text-[10px] tracking-wide text-muted-foreground/70 max-lg:landscape:hidden lg:hidden">
         Swipe for more channels
       </span>
     </section>

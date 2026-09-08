@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 interface VerticalFaderProps {
@@ -6,13 +6,33 @@ interface VerticalFaderProps {
   onChange: (value: number) => void;
   label: string;
   active?: boolean;
-  height?: number;
+  /** Tailwind height classes for the fader travel. */
+  heightClassName?: string;
 }
 
 /** Physical-fader style vertical slider: recessed track, raised round handle. */
-export function VerticalFader({ value, onChange, label, active = false, height = 176 }: VerticalFaderProps) {
+export function VerticalFader({
+  value,
+  onChange,
+  label,
+  active = false,
+  heightClassName = "h-44 max-lg:landscape:h-[19vh] max-lg:landscape:min-h-16 max-lg:landscape:max-h-24",
+}: VerticalFaderProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
+
+  /* Keep the page still while a finger is on the fader. */
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    const block = (e: TouchEvent) => e.preventDefault();
+    el.addEventListener("touchstart", block, { passive: false });
+    el.addEventListener("touchmove", block, { passive: false });
+    return () => {
+      el.removeEventListener("touchstart", block);
+      el.removeEventListener("touchmove", block);
+    };
+  }, []);
 
   const fromEvent = useCallback(
     (clientY: number) => {
@@ -51,22 +71,29 @@ export function VerticalFader({ value, onChange, label, active = false, height =
       aria-orientation="vertical"
       onKeyDown={onKeyDown}
       onPointerDown={(e) => {
+        e.stopPropagation();
         dragging.current = true;
         e.currentTarget.setPointerCapture(e.pointerId);
         fromEvent(e.clientY);
       }}
       onPointerMove={(e) => {
-        if (dragging.current) fromEvent(e.clientY);
+        if (!dragging.current) return;
+        e.stopPropagation();
+        fromEvent(e.clientY);
       }}
       onPointerUp={(e) => {
+        e.stopPropagation();
         dragging.current = false;
         e.currentTarget.releasePointerCapture(e.pointerId);
       }}
       onPointerCancel={() => {
         dragging.current = false;
       }}
-      className="relative mx-auto w-11 cursor-pointer touch-none rounded-full"
-      style={{ height }}
+      className={cn(
+        "relative mx-auto w-11 cursor-pointer touch-none overscroll-contain rounded-full select-none",
+        heightClassName,
+      )}
+      style={{ touchAction: "none" }}
     >
       {/* recessed track */}
       <div className="groove absolute inset-x-[13px] inset-y-0 rounded-full" />

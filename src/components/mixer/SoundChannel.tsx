@@ -18,8 +18,8 @@ export function SoundChannel({ sound, state, playing, onVolume, onToggleMute }: 
   const sounding = active && playing;
 
   return (
-    <div className="flex w-[76px] shrink-0 snap-start flex-col items-center gap-2">
-      <div className="flex h-4 items-center justify-center">
+    <div className="flex w-[76px] shrink-0 snap-start flex-col items-center gap-2 max-lg:landscape:w-[11.5%] max-lg:landscape:gap-1">
+      <div className="flex h-4 items-center justify-center max-lg:landscape:h-2">
         <span
           className={cn("h-1.5 w-1.5 rounded-full bg-primary", sounding ? "breathe" : "opacity-0")}
           aria-hidden="true"
@@ -35,14 +35,14 @@ export function SoundChannel({ sound, state, playing, onVolume, onToggleMute }: 
 
       <div
         className={cn(
-          "flex h-9 w-9 items-center justify-center rounded-full border border-panel-edge transition-colors",
+          "flex h-9 w-9 items-center justify-center rounded-full border border-panel-edge transition-colors max-lg:landscape:h-7 max-lg:landscape:w-7",
           active ? "bg-primary/12 text-primary" : "knob text-muted-foreground",
         )}
       >
         <SoundIcon name={sound.icon} />
       </div>
 
-      <span className="text-center text-[11px] leading-tight font-medium text-foreground/80">
+      <span className="text-center text-[11px] leading-tight font-medium text-foreground/80 max-lg:landscape:text-[10px]">
         {sound.name}
       </span>
 
@@ -52,7 +52,7 @@ export function SoundChannel({ sound, state, playing, onVolume, onToggleMute }: 
         aria-pressed={state.muted}
         aria-label={state.muted ? `Unmute ${sound.name}` : `Mute ${sound.name}`}
         className={cn(
-          "flex h-8 w-8 items-center justify-center rounded-full border border-panel-edge transition-colors",
+          "flex h-8 w-8 items-center justify-center rounded-full border border-panel-edge transition-colors max-lg:landscape:h-7 max-lg:landscape:w-7",
           state.muted ? "bg-destructive/15 text-destructive" : "knob text-muted-foreground",
         )}
       >

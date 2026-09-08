@@ -6,6 +6,8 @@ import { MasterControls } from "@/components/mixer/MasterControls";
 import { ModeSelector } from "@/components/mixer/ModeSelector";
 import { DigitalTimerDisplay } from "@/components/mixer/DigitalTimerDisplay";
 import { FirstRunOverlay } from "@/components/mixer/FirstRunOverlay";
+import { RotatePrompt } from "@/components/mixer/RotatePrompt";
+import { useIsPortraitPhone } from "@/hooks/use-orientation";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -36,15 +38,16 @@ function greeting() {
 
 function MixerScreen() {
   const { activeMode, applyMode, remainingMs, playing, audioErrors } = useMixer();
+  const portraitPhone = useIsPortraitPhone();
 
   return (
     <>
       <FirstRunOverlay />
-      <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-4 pt-6 lg:max-w-3xl">
+      <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-4 pt-6 max-lg:landscape:max-w-none max-lg:landscape:gap-2 max-lg:landscape:pt-3 lg:max-w-3xl">
         <header className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
           <div className="min-w-0">
             <p className="font-display text-[15px] tracking-tight text-primary">Mindful Mixer</p>
-            <h1 className="mt-1 font-display text-[24px] leading-tight">
+            <h1 className="mt-1 font-display text-[24px] leading-tight max-lg:landscape:sr-only">
               {greeting()}. What do you need right now?
             </h1>
           </div>
@@ -60,10 +63,10 @@ function MixerScreen() {
           </p>
         )}
 
-        <MixerConsole />
+        {portraitPhone ? <RotatePrompt /> : <MixerConsole />}
         <MasterControls />
 
-        <p className="pb-2 text-center text-[11px] text-muted-foreground/70">
+        <p className="pb-2 text-center text-[11px] text-muted-foreground/70 max-lg:landscape:hidden">
           Placeholder ambient tones are generated in your browser until studio recordings are added.
         </p>
       </div>
