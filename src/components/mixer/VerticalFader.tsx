@@ -16,7 +16,7 @@ export function VerticalFader({
   onChange,
   label,
   active = false,
-  heightClassName = "h-44 max-lg:landscape:h-[19vh] max-lg:landscape:min-h-16 max-lg:landscape:max-h-24",
+  heightClassName = "h-[clamp(7rem,23dvh,10rem)] max-lg:landscape:h-[clamp(4rem,20dvh,7rem)]",
 }: VerticalFaderProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
@@ -71,6 +71,7 @@ export function VerticalFader({
       aria-orientation="vertical"
       onKeyDown={onKeyDown}
       onPointerDown={(e) => {
+        e.preventDefault();
         e.stopPropagation();
         dragging.current = true;
         e.currentTarget.setPointerCapture(e.pointerId);
@@ -78,6 +79,7 @@ export function VerticalFader({
       }}
       onPointerMove={(e) => {
         if (!dragging.current) return;
+        e.preventDefault();
         e.stopPropagation();
         fromEvent(e.clientY);
       }}
@@ -89,8 +91,11 @@ export function VerticalFader({
       onPointerCancel={() => {
         dragging.current = false;
       }}
+      onLostPointerCapture={() => {
+        dragging.current = false;
+      }}
       className={cn(
-        "relative mx-auto w-11 cursor-pointer touch-none overscroll-contain rounded-full select-none",
+        "relative mx-auto w-full max-w-10 cursor-pointer touch-none overscroll-none rounded-full select-none",
         heightClassName,
       )}
       style={{ touchAction: "none" }}
@@ -100,19 +105,20 @@ export function VerticalFader({
       {/* illuminated active portion */}
       <div
         className={cn(
-          "absolute inset-x-[13px] bottom-0 rounded-full transition-[height,opacity,box-shadow] duration-200",
+          "absolute inset-x-[13px] bottom-0 rounded-full transition-[opacity,box-shadow] duration-200",
           active ? "opacity-100" : "opacity-35",
         )}
         style={{
           height: `${value}%`,
-          background: "linear-gradient(180deg, var(--color-primary), color-mix(in oklab, var(--color-primary) 70%, var(--color-accent)))",
+          background:
+            "linear-gradient(180deg, var(--color-primary), color-mix(in oklab, var(--color-primary) 70%, var(--color-accent)))",
           boxShadow: active ? "var(--glow-accent)" : "none",
         }}
       />
       {/* raised handle */}
       <div
-        className="knob pointer-events-none absolute left-1/2 h-7 w-10 -translate-x-1/2 rounded-full border border-panel-edge transition-[bottom] duration-100"
-        style={{ bottom: `calc(${value}% - 14px + ${(1 - value / 100) * 0}px)` }}
+        className="knob pointer-events-none absolute left-1/2 h-7 w-9 -translate-x-1/2 rounded-full border border-panel-edge"
+        style={{ bottom: `calc(${value}% - ${value * 0.28}px)` }}
       >
         <span className="absolute inset-x-2 top-1/2 h-px -translate-y-1/2 bg-panel-edge" />
       </div>

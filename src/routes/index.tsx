@@ -41,11 +41,11 @@ function MixerScreen() {
   return (
     <>
       <FirstRunOverlay />
-      <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-4 pt-6 max-lg:landscape:max-w-none max-lg:landscape:gap-2 max-lg:landscape:pt-3 lg:max-w-3xl">
+      <div className="mx-auto flex w-full max-w-lg flex-col gap-2 px-2.5 pt-3 max-lg:landscape:max-w-none max-lg:landscape:pt-2 lg:max-w-3xl">
         <header className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
           <div className="min-w-0">
             <p className="font-display text-[15px] tracking-tight text-primary">Mindful Mixer</p>
-            <h1 className="mt-1 font-display text-[24px] leading-tight max-lg:landscape:sr-only">
+            <h1 className="mt-0.5 font-display text-[20px] leading-tight max-lg:landscape:sr-only">
               {greeting()}. What do you need right now?
             </h1>
           </div>
@@ -67,10 +67,6 @@ function MixerScreen() {
 
         <MixerConsole />
         <MasterControls />
-
-        <p className="pb-2 text-center text-[11px] text-muted-foreground/70 max-lg:landscape:hidden">
-          Placeholder ambient tones are generated in your browser until studio recordings are added.
-        </p>
       </div>
     </>
   );

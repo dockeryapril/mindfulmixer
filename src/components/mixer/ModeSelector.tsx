@@ -18,7 +18,7 @@ export function ModeSelector({
           onClick={() => onSelect(mode.id)}
           aria-pressed={active === mode.id}
           className={cn(
-            "flex-1 rounded-full border px-3 py-2 text-[13px] font-medium transition-colors",
+            "flex-1 rounded-full border px-2 py-1.5 text-[12px] font-medium transition-colors",
             active === mode.id
               ? "border-primary/40 bg-primary/15 text-primary"
               : "border-panel-edge bg-card text-foreground/75 hover:bg-secondary",

@@ -61,7 +61,9 @@ export function MixerProvider({ children }: { children: ReactNode }) {
   const engine = getEngine();
   const [hydrated, setHydrated] = useState(false);
   const [channels, setChannels] = useState<ChannelMap>(() => emptyChannels());
-  const [masterVolume, setMaster] = useState(75);
+  // Kept in saved-mix data for backwards compatibility. With no master
+  // control in the UI, individual faders map directly to full-scale output.
+  const [masterVolume, setMaster] = useState(100);
   const [playing, setPlaying] = useState(false);
   const [activeMode, setActiveMode] = useState<ModeId | null>(null);
   const [persisted, setPersisted] = useState<PersistedState>(() => defaultState());
@@ -79,7 +81,7 @@ export function MixerProvider({ children }: { children: ReactNode }) {
     setTimerMinutes(state.settings.defaultTimerMinutes);
     if (state.settings.rememberLastMix && state.lastMix) {
       setChannels({ ...emptyChannels(), ...state.lastMix.channels });
-      setMaster(state.lastMix.masterVolume);
+      setMaster(100);
     }
     setHydrated(true);
   }, []);
@@ -112,8 +114,13 @@ export function MixerProvider({ children }: { children: ReactNode }) {
   }, [channels, engine, playing]);
 
   useEffect(() => {
-    engine.setMaster(masterVolume / 100);
-  }, [masterVolume, engine]);
+    engine.setMaster(1);
+  }, [engine]);
+
+  const anySound = useMemo(
+    () => SOUNDS.some((s) => (channels[s.id]?.volume ?? 0) > 0 && !channels[s.id]?.muted),
+    [channels],
+  );
 
   const haptic = useCallback(() => {
     if (!persisted.settings.haptics) return;
@@ -125,14 +132,38 @@ export function MixerProvider({ children }: { children: ReactNode }) {
   }, [persisted.settings.haptics]);
 
   // --- controls ------------------------------------------------------------
-  const setVolume = useCallback((id: string, volume: number) => {
-    const v = Math.max(0, Math.min(100, Math.round(volume)));
-    setChannels((prev) => ({
-      ...prev,
-      [id]: { volume: v, muted: v === 0 ? false : (prev[id]?.muted ?? false) },
-    }));
-    setActiveMode(null);
-  }, []);
+  const startingRef = useRef(false);
+
+  const ensurePlayback = useCallback(async () => {
+    fadingRef.current = false;
+    if (engine.playing) {
+      setPlaying(true);
+      return;
+    }
+    if (startingRef.current) return;
+    startingRef.current = true;
+    try {
+      await engine.play();
+      engine.setMaster(1);
+      setPlaying(true);
+    } finally {
+      startingRef.current = false;
+    }
+  }, [engine]);
+
+  const setVolume = useCallback(
+    (id: string, volume: number) => {
+      const v = Math.max(0, Math.min(100, Math.round(volume)));
+      setChannels((prev) => ({
+        ...prev,
+        // Moving a fader is an explicit request to hear that channel.
+        [id]: { volume: v, muted: false },
+      }));
+      setActiveMode(null);
+      if (v > 0) void ensurePlayback();
+    },
+    [ensurePlayback],
+  );
 
   const toggleMute = useCallback(
     (id: string) => {
@@ -141,24 +172,15 @@ export function MixerProvider({ children }: { children: ReactNode }) {
         const cur = prev[id] ?? { volume: 0, muted: false };
         return { ...prev, [id]: { ...cur, muted: !cur.muted } };
       });
+      const cur = channels[id];
+      if (cur?.muted && cur.volume > 0) void ensurePlayback();
     },
-    [haptic],
+    [channels, ensurePlayback, haptic],
   );
 
   const setMasterVolume = useCallback((v: number) => {
     setMaster(Math.max(0, Math.min(100, Math.round(v))));
   }, []);
-
-  const startPlayback = useCallback(async () => {
-    fadingRef.current = false;
-    await engine.play();
-    for (const def of SOUNDS) {
-      const ch = channels[def.id];
-      engine.setChannel(def.id, ch && !ch.muted ? ch.volume / 100 : 0);
-    }
-    engine.setMaster(masterVolume / 100);
-    setPlaying(true);
-  }, [channels, engine, masterVolume]);
 
   const stopPlayback = useCallback(
     (fadeSeconds = 0.5) => {
@@ -171,19 +193,27 @@ export function MixerProvider({ children }: { children: ReactNode }) {
   const togglePlay = useCallback(() => {
     haptic();
     if (playing) stopPlayback(0.6);
-    else void startPlayback();
-  }, [haptic, playing, startPlayback, stopPlayback]);
+    else void ensurePlayback();
+  }, [ensurePlayback, haptic, playing, stopPlayback]);
 
-  const applyMode = useCallback((id: ModeId) => {
-    const mode = MODES.find((m) => m.id === id);
-    if (!mode) return;
-    const next = emptyChannels();
-    for (const [sound, volume] of Object.entries(mode.levels))
-      next[sound] = { volume, muted: false };
-    setChannels(next);
-    setActiveMode(id);
-    setLoadedMixId(null);
-  }, []);
+  useEffect(() => {
+    if (hydrated && playing && !anySound) stopPlayback(0.25);
+  }, [anySound, hydrated, playing, stopPlayback]);
+
+  const applyMode = useCallback(
+    (id: ModeId) => {
+      const mode = MODES.find((m) => m.id === id);
+      if (!mode) return;
+      const next = emptyChannels();
+      for (const [sound, volume] of Object.entries(mode.levels))
+        next[sound] = { volume, muted: false };
+      setChannels(next);
+      setActiveMode(id);
+      setLoadedMixId(null);
+      void ensurePlayback();
+    },
+    [ensurePlayback],
+  );
 
   const clearMix = useCallback(() => {
     setChannels(emptyChannels());
@@ -199,7 +229,8 @@ export function MixerProvider({ children }: { children: ReactNode }) {
     setChannels(shuffleChannels());
     setActiveMode(null);
     setLoadedMixId(null);
-  }, [haptic]);
+    void ensurePlayback();
+  }, [ensurePlayback, haptic]);
 
   // --- timer ---------------------------------------------------------------
   const startTimer = useCallback(
@@ -212,9 +243,9 @@ export function MixerProvider({ children }: { children: ReactNode }) {
       }
       setEndsAt(Date.now() + minutes * 60_000);
       setRemainingMs(minutes * 60_000);
-      if (!playing) void startPlayback();
+      if (!playing) void ensurePlayback();
     },
-    [playing, startPlayback],
+    [ensurePlayback, playing],
   );
 
   const cancelTimer = useCallback(() => {
@@ -315,7 +346,7 @@ export function MixerProvider({ children }: { children: ReactNode }) {
       const mix = persisted.mixes.find((m) => m.id === id);
       if (!mix) return;
       setChannels({ ...emptyChannels(), ...mix.channels });
-      setMaster(mix.masterVolume);
+      setMaster(100);
       setTimerMinutes(mix.timerMinutes);
       // A saved timer is a preference, not an already-running session. Loading
       // a mix must never begin its countdown before the user starts it.
@@ -326,18 +357,14 @@ export function MixerProvider({ children }: { children: ReactNode }) {
       mutateMixes((prev) =>
         prev.map((m) => (m.id === id ? { ...m, lastUsed: new Date().toISOString() } : m)),
       );
+      void ensurePlayback();
     },
-    [mutateMixes, persisted.mixes],
+    [ensurePlayback, mutateMixes, persisted.mixes],
   );
 
   const updateSettings = useCallback((patch: Partial<Settings>) => {
     setPersisted((prev) => ({ ...prev, settings: { ...prev.settings, ...patch } }));
   }, []);
-
-  const anySound = useMemo(
-    () => SOUNDS.some((s) => (channels[s.id]?.volume ?? 0) > 0 && !channels[s.id]?.muted),
-    [channels],
-  );
 
   const value: MixerContextValue = {
     hydrated,
