@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 interface VerticalFaderProps {
@@ -6,13 +6,33 @@ interface VerticalFaderProps {
   onChange: (value: number) => void;
   label: string;
   active?: boolean;
-  height?: number;
+  /** Tailwind height classes for the fader travel. */
+  heightClassName?: string;
 }
 
 /** Physical-fader style vertical slider: recessed track, raised round handle. */
-export function VerticalFader({ value, onChange, label, active = false, height = 176 }: VerticalFaderProps) {
+export function VerticalFader({
+  value,
+  onChange,
+  label,
+  active = false,
+  heightClassName = "h-44 max-lg:landscape:h-[34vh] max-lg:landscape:min-h-28",
+}: VerticalFaderProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
+
+  /* Keep the page still while a finger is on the fader. */
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    const block = (e: TouchEvent) => e.preventDefault();
+    el.addEventListener("touchstart", block, { passive: false });
+    el.addEventListener("touchmove", block, { passive: false });
+    return () => {
+      el.removeEventListener("touchstart", block);
+      el.removeEventListener("touchmove", block);
+    };
+  }, []);
 
   const fromEvent = useCallback(
     (clientY: number) => {
