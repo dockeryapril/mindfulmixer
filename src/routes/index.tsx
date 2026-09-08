@@ -28,10 +28,10 @@ export const Route = createFileRoute("/")({
 
 function greeting() {
   const h = new Date().getHours();
-  if (h < 5) return "Late night. What do you need right now?";
-  if (h < 12) return "Good morning. What do you need right now?";
-  if (h < 18) return "Good afternoon. What do you need right now?";
-  return "Good evening. What do you need right now?";
+  if (h < 5) return "Late night";
+  if (h < 12) return "Good morning";
+  if (h < 18) return "Good afternoon";
+  return "Good evening";
 }
 
 function MixerScreen() {
@@ -44,7 +44,9 @@ function MixerScreen() {
         <header className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
           <div className="min-w-0">
             <p className="font-display text-[15px] tracking-tight text-primary">Mindful Mixer</p>
-            <h1 className="mt-1 font-display text-[26px] leading-tight">{greeting()}</h1>
+            <h1 className="mt-1 font-display text-[24px] leading-tight">
+              {greeting()}. What do you need right now?
+            </h1>
           </div>
           <DigitalTimerDisplay remainingMs={remainingMs} playing={playing} className="mt-1 shrink-0" />
         </header>
