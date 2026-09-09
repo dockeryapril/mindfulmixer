@@ -3,7 +3,7 @@ import { useMixer } from "@/hooks/use-mixer";
 import { SoundChannel } from "./SoundChannel";
 import { cn } from "@/lib/utils";
 
-export function MixerConsole() {
+export function MixerConsole({ className }: { className?: string }) {
   const { channels, playing, setVolume, toggleMute, unlockAudio, anySound } = useMixer();
   return (
     <section
@@ -11,9 +11,10 @@ export function MixerConsole() {
       className={cn(
         "panel relative rounded-3xl px-2 py-2.5 transition-shadow duration-500",
         playing && "ring-1 ring-primary/20",
+        className,
       )}
     >
-      <div className="flex w-full touch-none items-end justify-between gap-0.5 overflow-hidden overscroll-none">
+      <div className="flex w-full touch-none items-end justify-between gap-0.5 overflow-hidden overscroll-none max-lg:landscape:h-full">
         {SOUNDS.map((sound) => (
           <SoundChannel
             key={sound.id}

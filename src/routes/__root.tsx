@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -14,7 +15,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { MixerProvider } from "@/hooks/use-mixer";
 import { BottomNavigation } from "@/components/mixer/BottomNavigation";
 import { Toaster } from "@/components/ui/sonner";
-
+import { cn } from "@/lib/utils";
 
 function NotFoundComponent() {
   return (
@@ -127,11 +128,18 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const mixerOpen = useRouterState({ select: (state) => state.location.pathname === "/" });
 
   return (
     <QueryClientProvider client={queryClient}>
       <MixerProvider>
-        <div className="min-h-screen pb-28">
+        <div
+          className={cn(
+            "min-h-screen pb-28",
+            mixerOpen &&
+              "max-lg:landscape:h-dvh max-lg:landscape:min-h-0 max-lg:landscape:overflow-hidden max-lg:landscape:pb-0",
+          )}
+        >
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
         </div>
@@ -141,4 +149,3 @@ function RootComponent() {
     </QueryClientProvider>
   );
 }
-

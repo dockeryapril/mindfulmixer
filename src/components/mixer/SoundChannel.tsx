@@ -25,7 +25,7 @@ export function SoundChannel({
   const sounding = active && playing;
 
   return (
-    <div className="flex min-w-0 flex-1 flex-col items-center gap-1">
+    <div className="flex min-w-0 flex-1 flex-col items-center gap-1 max-lg:landscape:h-full">
       <span
         className={cn(
           "digital flex h-4 items-center text-[10px] leading-none tabular-nums",
