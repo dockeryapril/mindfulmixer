@@ -14,6 +14,12 @@ type Channel = {
   schedule?: ((until: number) => void) | undefined;
 };
 
+type PlaybackNavigator = Navigator & {
+  audioSession?: {
+    type: "ambient" | "playback" | "transient" | "transient-solo" | "play-and-record";
+  };
+};
+
 const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
 
 function noiseBuffer(ctx: AudioContext, kind: "white" | "brown", seconds = 6) {
@@ -258,6 +264,18 @@ class AudioEngine {
 
   async ensure(): Promise<boolean> {
     if (typeof window === "undefined") return false;
+
+    // WebKit normally categorizes Web Audio as ambient, which the iPhone
+    // Ring/Silent switch mutes. Mindful Mixer is user-requested media, so opt
+    // into the playback category before creating or resuming the context.
+    try {
+      const session = (navigator as PlaybackNavigator).audioSession;
+      if (session) session.type = "playback";
+    } catch {
+      // Older browsers do not expose the Audio Session API; audio still works
+      // with their normal platform behavior.
+    }
+
     if (!this.ctx) {
       const AC: typeof AudioContext =
         window.AudioContext ??
