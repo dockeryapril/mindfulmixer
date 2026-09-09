@@ -26,7 +26,7 @@ export function VerticalFader({
   handle,
   onToggleMute,
   onInteractionStart,
-  heightClassName = "h-[clamp(7rem,23dvh,10rem)] max-lg:landscape:h-[clamp(4rem,20dvh,7rem)]",
+  heightClassName = "h-[clamp(7rem,23dvh,10rem)] max-lg:landscape:h-[calc(100%-1.25rem)]",
 }: VerticalFaderProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);

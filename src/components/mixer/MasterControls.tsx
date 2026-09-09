@@ -40,14 +40,14 @@ function SmallControl({
   );
 }
 
-export function MasterControls() {
+export function MasterControls({ className }: { className?: string }) {
   const { anySound, clearMix, shuffle, saveCurrentMix } = useMixer();
   const [saveOpen, setSaveOpen] = useState(false);
   const [name, setName] = useState("");
 
   return (
-    <section aria-label="Mix actions" className="panel rounded-3xl p-2">
-      <div className="grid grid-cols-4 gap-2">
+    <section aria-label="Mix actions" className={cn("panel rounded-3xl p-2", className)}>
+      <div className="grid grid-cols-4 gap-2 max-lg:landscape:grid-cols-2 max-lg:landscape:gap-1">
         <SessionTimer />
         <SmallControl
           label="Save"
