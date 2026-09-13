@@ -74,6 +74,11 @@ export function MixerProvider({ children }: { children: ReactNode }) {
   const [remainingMs, setRemainingMs] = useState<number | null>(null);
   const [audioErrors, setAudioErrors] = useState<string[]>([]);
   const fadingRef = useRef(false);
+  const channelsRef = useRef(channels);
+
+  useEffect(() => {
+    channelsRef.current = channels;
+  }, [channels]);
 
   // --- hydrate from local storage -----------------------------------------
   useEffect(() => {
@@ -133,27 +138,37 @@ export function MixerProvider({ children }: { children: ReactNode }) {
   }, [persisted.settings.haptics]);
 
   // --- controls ------------------------------------------------------------
-  const startingRef = useRef(false);
+  const startingPromiseRef = useRef<Promise<boolean> | null>(null);
 
   const ensurePlayback = useCallback(async () => {
     fadingRef.current = false;
     if (engine.playing) {
       setPlaying(true);
-      return;
+      return true;
     }
-    if (startingRef.current) return;
-    startingRef.current = true;
-    try {
-      const started = await engine.play();
-      if (started) {
-        engine.setMaster(1);
-        setPlaying(true);
-      } else {
-        setPlaying(false);
-      }
-    } finally {
-      startingRef.current = false;
+
+    if (!startingPromiseRef.current) {
+      startingPromiseRef.current = engine.play().finally(() => {
+        startingPromiseRef.current = null;
+      });
     }
+
+    const started = await startingPromiseRef.current;
+    if (!started) {
+      setPlaying(false);
+      return false;
+    }
+
+    // The first channel can change while Web Audio is still starting. Apply
+    // the latest React state after startup so that first interaction is not
+    // lost waiting for a second fader or button press.
+    for (const def of SOUNDS) {
+      const channel = channelsRef.current[def.id];
+      engine.setChannel(def.id, channel && !channel.muted ? channel.volume / 100 : 0);
+    }
+    engine.setMaster(1);
+    setPlaying(true);
+    return true;
   }, [engine]);
 
   // Called on pointer-down so iOS receives the Web Audio resume request while
@@ -171,9 +186,15 @@ export function MixerProvider({ children }: { children: ReactNode }) {
         [id]: { volume: v, muted: false },
       }));
       setActiveMode(null);
-      if (v > 0) void ensurePlayback();
+      if (v > 0) {
+        void ensurePlayback().then((started) => {
+          // Guarantee that this interaction reaches the newly-created engine,
+          // even if React has not committed the channel update yet.
+          if (started) engine.setChannel(id, v / 100);
+        });
+      }
     },
-    [ensurePlayback],
+    [engine, ensurePlayback],
   );
 
   const toggleMute = useCallback(
