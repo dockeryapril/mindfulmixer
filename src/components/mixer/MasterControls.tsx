@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bookmark, Eraser, Shuffle } from "lucide-react";
+import { Bookmark, Play, Shuffle, Square } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -18,19 +18,22 @@ function SmallControl({
   icon,
   onClick,
   active,
+  disabled,
 }: {
   label: string;
   icon: React.ReactNode;
   onClick: () => void;
   active?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={label}
+      disabled={disabled}
       className={cn(
-        "flex h-11 flex-col items-center justify-center gap-0.5 rounded-2xl border border-panel-edge text-[11px] font-medium transition-colors",
+        "flex h-11 flex-col items-center justify-center gap-0.5 rounded-2xl border border-panel-edge text-[11px] font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-45",
         active ? "bg-primary/12 text-primary" : "knob text-foreground/75",
       )}
     >
@@ -41,7 +44,7 @@ function SmallControl({
 }
 
 export function MasterControls({ className }: { className?: string }) {
-  const { anySound, clearMix, shuffle, saveCurrentMix } = useMixer();
+  const { anySound, playing, shuffle, saveCurrentMix, togglePlay } = useMixer();
   const [saveOpen, setSaveOpen] = useState(false);
   const [name, setName] = useState("");
 
@@ -66,12 +69,17 @@ export function MasterControls({ className }: { className?: string }) {
           onClick={shuffle}
         />
         <SmallControl
-          label="Clear"
-          icon={<Eraser size={17} strokeWidth={1.7} aria-hidden="true" />}
-          onClick={() => {
-            clearMix();
-            toast("Mix cleared");
-          }}
+          label={playing ? "Stop" : "Play"}
+          icon={
+            playing ? (
+              <Square size={16} fill="currentColor" strokeWidth={1.7} aria-hidden="true" />
+            ) : (
+              <Play size={17} fill="currentColor" strokeWidth={1.7} aria-hidden="true" />
+            )
+          }
+          onClick={togglePlay}
+          active={playing}
+          disabled={!anySound}
         />
       </div>
 
